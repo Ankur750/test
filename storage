@@ -1,0 +1,19 @@
+---
+- name: Execute command using filenames and LDEVs with regex
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Define LDEV list (20 LDEVs)
+      set_fact:
+        ldevs: "{{ range(100, 120) | list }}"  # Generates LDEVs from 100 to 119
+
+    - name: Generate filenames using regex
+      set_fact:
+        filenames: "{{ filenames | default([]) + ['hur-' ~ idx|string | regex_replace('^(\\d)$', '0\\1')] }}"
+      loop: "{{ range(0, ldevs | length) | list }}"
+      loop_control:
+        index_var: idx
+
+    - name: Execute command for each filename and LDEV
+      command: echo "Processing {{ item.0 }} with LDEV {{ item.1 }}"
+      loop: "{{ filenames | zip(ldevs) | list }}"
